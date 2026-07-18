@@ -3,7 +3,8 @@ import { WorldMap2D } from './components/WorldMap2D';
 import { TickerBar } from './components/TickerBar';
 import { ChartModal } from './components/ChartModal';
 import { Portfolio } from './components/Portfolio';
-import { NexusSimulator, MarketIndex, NewsItem, MapEvent } from './core/simulator';
+import { NexusSimulator } from './core/simulator';
+import type { MarketIndex, NewsItem, MapEvent } from './core/simulator';
 import { uiAudio } from './core/audio';
 
 function App() {

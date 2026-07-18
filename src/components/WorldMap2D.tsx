@@ -1,11 +1,11 @@
-import React from 'react';
+import { useState } from 'react';
 import {
   ComposableMap,
   Geographies,
   Geography,
   Marker
 } from 'react-simple-maps';
-import { MapEvent } from '../core/simulator';
+import type { MapEvent } from '../core/simulator';
 
 const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-110m.json";
 

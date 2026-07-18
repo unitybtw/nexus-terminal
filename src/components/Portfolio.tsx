@@ -1,6 +1,6 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { MarketIndex } from '../core/simulator';
+import type { MarketIndex } from '../core/simulator';
 
 interface PortfolioProps {
   indices: MarketIndex[];
@@ -57,10 +57,10 @@ export const Portfolio: React.FC<PortfolioProps> = ({ indices }) => {
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-md font-mono text-sm transition-colors">
+          <button onClick={() => alert("Smart Contract Integration Pending...")} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-md font-mono text-sm transition-colors">
             DEPOSIT
           </button>
-          <button className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-2 rounded-md font-mono text-sm transition-colors">
+          <button onClick={() => alert("Smart Contract Integration Pending...")} className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-2 rounded-md font-mono text-sm transition-colors">
             WITHDRAW
           </button>
         </div>
@@ -88,7 +88,7 @@ export const Portfolio: React.FC<PortfolioProps> = ({ indices }) => {
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value: number) => `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                  formatter={(value: any) => `$${Number(value).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
                   contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px' }}
                   itemStyle={{ color: '#fff' }}
                 />

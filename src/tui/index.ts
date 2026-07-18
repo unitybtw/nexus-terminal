@@ -1,7 +1,8 @@
 import blessed from 'blessed';
 // @ts-ignore
 import contrib from 'blessed-contrib';
-import { NexusSimulator, MarketIndex, NewsItem, MapEvent } from '../core/simulator';
+import { NexusSimulator } from '../core/simulator';
+import type { MarketIndex, NewsItem, MapEvent } from '../core/simulator';
 
 const screen = blessed.screen({
   smartCSR: true,
@@ -58,7 +59,7 @@ const newsLog = grid.set(9, 0, 3, 12, contrib.log, {
   border: { type: 'line', fg: 'cyan' }
 });
 
-screen.key(['escape', 'q', 'C-c'], function(ch: any, key: any) {
+screen.key(['escape', 'q', 'C-c'], function(_ch: any, _key: any) {
   return process.exit(0);
 });
 
@@ -136,6 +137,7 @@ simulator.onMapUpdate = (events: MapEvent[]) => {
   if (map.clearMarkers) map.clearMarkers();
   
   events.forEach(evt => {
+    // @ts-ignore
     map.addMarker({
       "lon": evt.lon,
       "lat": evt.lat,

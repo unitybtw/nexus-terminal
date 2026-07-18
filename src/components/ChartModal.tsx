@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { MarketIndex } from '../core/simulator';
+import type { MarketIndex } from '../core/simulator';
 import { uiAudio } from '../core/audio';
 
 interface ChartModalProps {
