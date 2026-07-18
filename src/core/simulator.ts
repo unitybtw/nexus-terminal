@@ -15,6 +15,15 @@ export interface NewsItem {
   isAlert: boolean;
 }
 
+export interface MapEvent {
+  id: string;
+  lon: number;
+  lat: number;
+  title: string;
+  magnitude: number;
+  time: string;
+}
+
 // Initial state before socket connects
 export const INITIAL_INDICES: MarketIndex[] = [
   { name: 'BTC/USDT', value: 0, change: 0, isPos: true, history: [] },
@@ -26,15 +35,19 @@ export const INITIAL_INDICES: MarketIndex[] = [
 export class NexusSimulator {
   private indices: MarketIndex[];
   private news: NewsItem[];
+  private mapEvents: MapEvent[];
   private ws: WebSocket | null = null;
   private newsInterval: NodeJS.Timeout | null = null;
+  private mapInterval: NodeJS.Timeout | null = null;
   
   public onMarketUpdate: ((indices: MarketIndex[]) => void) | null = null;
   public onNewsUpdate: ((news: NewsItem[]) => void) | null = null;
+  public onMapUpdate: ((events: MapEvent[]) => void) | null = null;
 
   constructor() {
     this.indices = [...INITIAL_INDICES];
     this.news = [];
+    this.mapEvents = [];
   }
 
   private getCurrentTime() {
@@ -44,11 +57,17 @@ export class NexusSimulator {
   public start() {
     this.connectBinance();
     this.fetchNews();
+    this.fetchMapEvents();
     
     // Refresh news every 60 seconds
     this.newsInterval = setInterval(() => {
       this.fetchNews();
     }, 60000);
+
+    // Refresh earthquakes every 5 minutes
+    this.mapInterval = setInterval(() => {
+      this.fetchMapEvents();
+    }, 300000);
   }
 
   private connectBinance() {
@@ -138,12 +157,44 @@ export class NexusSimulator {
     }
   }
 
+  private async fetchMapEvents() {
+    try {
+      // Fetch earthquakes from USGS API (M4.5+)
+      const response = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson');
+      const data = await response.json();
+
+      if (data && data.features) {
+        const newEvents: MapEvent[] = data.features.slice(0, 50).map((feature: any) => {
+          const dateObj = new Date(feature.properties.time);
+          return {
+            id: feature.id,
+            lon: feature.geometry.coordinates[0],
+            lat: feature.geometry.coordinates[1],
+            title: feature.properties.title,
+            magnitude: feature.properties.mag,
+            time: dateObj.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+          };
+        });
+
+        this.mapEvents = newEvents;
+        if (this.onMapUpdate) {
+          this.onMapUpdate(this.mapEvents);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch USGS events:', error);
+    }
+  }
+
   public stop() {
     if (this.ws) {
       this.ws.close();
     }
     if (this.newsInterval) {
       clearInterval(this.newsInterval);
+    }
+    if (this.mapInterval) {
+      clearInterval(this.mapInterval);
     }
   }
 
@@ -153,5 +204,9 @@ export class NexusSimulator {
 
   public getNews() {
     return this.news;
+  }
+
+  public getMapEvents() {
+    return this.mapEvents;
   }
 }

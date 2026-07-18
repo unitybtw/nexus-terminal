@@ -1,7 +1,7 @@
 import blessed from 'blessed';
 // @ts-ignore
 import contrib from 'blessed-contrib';
-import { NexusSimulator, MarketIndex, NewsItem } from '../core/simulator';
+import { NexusSimulator, MarketIndex, NewsItem, MapEvent } from '../core/simulator';
 
 const screen = blessed.screen({
   smartCSR: true,
@@ -11,18 +11,22 @@ const screen = blessed.screen({
 const grid = new contrib.grid({ rows: 12, cols: 12, screen: screen });
 
 // 1. Map (Top Left)
-const map = grid.set(0, 0, 6, 8, contrib.map, {
-  label: 'Global Radar',
+const map = grid.set(0, 0, 6, 6, contrib.map, {
+  label: 'Global Seismic Radar (M4.5+)',
   style: { shapeColor: 'cyan' }
 });
 
-map.addMarker({ "lon": "-74.006", "lat": "40.7128", color: "red", char: "X" }); // NY
-map.addMarker({ "lon": "-0.1276", "lat": "51.5074", color: "yellow", char: "X" }); // London
-map.addMarker({ "lon": "139.6917", "lat": "35.6895", color: "magenta", char: "X" }); // Tokyo
-map.addMarker({ "lon": "28.9784", "lat": "41.0082", color: "green", char: "X" }); // Istanbul
+// 2. Bar Chart (Top Middle)
+const barChart = grid.set(0, 6, 6, 3, contrib.bar, {
+  label: 'Volatility (%)',
+  barWidth: 4,
+  barSpacing: 2,
+  xOffset: 1,
+  maxHeight: 15
+});
 
-// 2. Market Table (Top Right)
-const marketTable = grid.set(0, 8, 6, 4, contrib.table, {
+// 3. Market Table (Top Right)
+const marketTable = grid.set(0, 9, 6, 3, contrib.table, {
   keys: true,
   fg: 'white',
   selectedFg: 'white',
@@ -79,8 +83,14 @@ simulator.onMarketUpdate = (indices: MarketIndex[]) => {
   ]);
   
   marketTable.setData({
-    headers: ['Index', 'Value', 'Change'],
+    headers: ['Asset', 'Price', 'Chg'],
     data: data
+  });
+
+  // Update Bar Chart
+  barChart.setData({
+    titles: indices.map(i => i.name.split('/')[0]),
+    data: indices.map(i => Math.abs(i.change))
   });
 
   // Update Line Chart (throttle to max 1 data point per second)
@@ -119,6 +129,21 @@ simulator.onNewsUpdate = (news: NewsItem[]) => {
       screen.render();
     }
   }
+};
+
+simulator.onMapUpdate = (events: MapEvent[]) => {
+  // @ts-ignore
+  if (map.clearMarkers) map.clearMarkers();
+  
+  events.forEach(evt => {
+    map.addMarker({
+      "lon": evt.lon,
+      "lat": evt.lat,
+      color: "red",
+      char: "X"
+    });
+  });
+  screen.render();
 };
 
 simulator.start();

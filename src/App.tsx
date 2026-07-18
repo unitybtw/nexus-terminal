@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { WorldMap2D } from './components/WorldMap2D';
 import { TickerBar } from './components/TickerBar';
 import { ChartModal } from './components/ChartModal';
-import { NexusSimulator, MarketIndex, NewsItem } from './core/simulator';
+import { NexusSimulator, MarketIndex, NewsItem, MapEvent } from './core/simulator';
 
 function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -10,6 +10,7 @@ function App() {
   const [selectedMarket, setSelectedMarket] = useState<MarketIndex | null>(null);
   const [indices, setIndices] = useState<MarketIndex[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [mapEvents, setMapEvents] = useState<MapEvent[]>([]);
 
   useEffect(() => {
     const simulator = new NexusSimulator();
@@ -20,6 +21,10 @@ function App() {
 
     simulator.onNewsUpdate = (newNews) => {
       setNews(newNews);
+    };
+
+    simulator.onMapUpdate = (newEvents) => {
+      setMapEvents(newEvents);
     };
 
     simulator.start();
