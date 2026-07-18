@@ -1,69 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { WorldMap2D } from './components/WorldMap2D';
 import { TickerBar } from './components/TickerBar';
-
-const ALL_NEWS_POOL = [
-  { time: '', tag: 'Alert', text: 'Tech sector sees sharp selloff; Semiconductor index drops 2.4% in early trading.', isAlert: true },
-  { time: '', tag: 'Crypto', text: 'Bitcoin surges past $65K resistance level amid institutional accumulation reports.', isAlert: false },
-  { time: '', tag: 'Energy', text: 'Oil prices rise to 3-month high after sudden supply chain disruptions.', isAlert: true },
-  { time: '', tag: 'Macro', text: 'ECB announces unexpected interest rate hold, citing resilient inflation data.', isAlert: false },
-  { time: '', tag: 'Earnings', text: 'Apple beats Q3 estimates, services revenue up 14% year-over-year.', isAlert: false },
-  { time: '', tag: 'Geo', text: 'New trade tariffs announced in Southeast Asia, impacting global shipping routes.', isAlert: true }
-];
+import { NexusSimulator, MarketIndex, NewsItem } from './core/simulator';
 
 function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedCity, setSelectedCity] = useState<any>(null);
-  
-  // Simulated dynamic index values
-  const [indices, setIndices] = useState([
-    { name: 'S&P 500', value: 5137.08, change: 1.2, isPos: true },
-    { name: 'NASDAQ', value: 16274.94, change: -0.4, isPos: false },
-    { name: 'BIST 100', value: 9155.32, change: 2.1, isPos: true },
-    { name: 'FTSE 100', value: 7682.50, change: 0.8, isPos: true }
-  ]);
-
-  // Simulated dynamic news
-  const [news, setNews] = useState(() => {
-    return ALL_NEWS_POOL.slice(0, 3).map(n => ({
-      ...n,
-      time: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })
-    }));
-  });
+  const [indices, setIndices] = useState<MarketIndex[]>([]);
+  const [news, setNews] = useState<NewsItem[]>([]);
 
   useEffect(() => {
+    const simulator = new NexusSimulator();
+    
+    simulator.onMarketUpdate = (newIndices) => {
+      setIndices(newIndices);
+    };
+
+    simulator.onNewsUpdate = (newNews) => {
+      setNews(newNews);
+    };
+
+    simulator.start();
+
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
-  // Update indices slightly every 2 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIndices(prev => prev.map(ind => {
-        const volatility = (Math.random() - 0.5) * 5;
-        const newValue = ind.value + volatility;
-        return { ...ind, value: parseFloat(newValue.toFixed(2)) };
-      }));
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Push new news every 8 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setNews(prev => {
-        const randomNews = ALL_NEWS_POOL[Math.floor(Math.random() * ALL_NEWS_POOL.length)];
-        const newItem = {
-          ...randomNews,
-          time: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })
-        };
-        const newFeed = [newItem, ...prev].slice(0, 15);
-        return newFeed;
-      });
-    }, 8000);
-    return () => clearInterval(interval);
+    return () => {
+      simulator.stop();
+      clearInterval(timer);
+    };
   }, []);
 
   const formatTime = (date: Date) => {
