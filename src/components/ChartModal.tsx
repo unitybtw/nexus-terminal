@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { MarketIndex } from '../core/simulator';
+import { uiAudio } from '../core/audio';
 
 interface ChartModalProps {
   data: MarketIndex | null;
@@ -8,6 +9,12 @@ interface ChartModalProps {
 }
 
 export function ChartModal({ data, onClose }: ChartModalProps) {
+  useEffect(() => {
+    if (data) {
+      uiAudio.playOpen();
+    }
+  }, [data]);
+
   if (!data) return null;
 
   return (

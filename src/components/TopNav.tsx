@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Settings, User, Activity } from 'lucide-react';
+import { Search, Bell, Settings, User, Activity, Volume2, VolumeX } from 'lucide-react';
+import { uiAudio } from '../core/audio';
 
 export const TopNav: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isMuted, setIsMuted] = useState(uiAudio.isMuted);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -10,6 +12,10 @@ export const TopNav: React.FC = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleToggleMute = () => {
+    setIsMuted(uiAudio.toggleMute());
+  };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('tr-TR', { 
@@ -104,7 +110,25 @@ export const TopNav: React.FC = () => {
         
         <div style={{ width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)' }}></div>
         
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button 
+            onClick={handleToggleMute}
+            style={{ 
+              background: isMuted ? 'rgba(255,255,255,0.05)' : 'rgba(16, 185, 129, 0.1)', 
+              border: `1px solid ${isMuted ? 'rgba(255,255,255,0.1)' : 'rgba(16, 185, 129, 0.3)'}`, 
+              color: isMuted ? 'var(--text-secondary)' : '#34d399', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              padding: '0.4rem', 
+              borderRadius: '0.5rem',
+              transition: 'all 0.2s ease'
+            }}
+            title={isMuted ? "Sound Off" : "Sound On"}
+          >
+            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+          </button>
+          
           <button style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', position: 'relative' }}>
             <Bell size={20} />
             <span style={{ 

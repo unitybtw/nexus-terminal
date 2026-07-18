@@ -3,6 +3,7 @@ import { WorldMap2D } from './components/WorldMap2D';
 import { TickerBar } from './components/TickerBar';
 import { ChartModal } from './components/ChartModal';
 import { NexusSimulator, MarketIndex, NewsItem, MapEvent } from './core/simulator';
+import { uiAudio } from './core/audio';
 
 function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -20,10 +21,17 @@ function App() {
     };
 
     simulator.onNewsUpdate = (newNews) => {
+      // Check if there's a new alert to play sound
+      if (newNews.length > 0 && newNews[0].isAlert) {
+        uiAudio.playAlert();
+      }
       setNews(newNews);
     };
 
     simulator.onMapUpdate = (newEvents) => {
+      if (newEvents.length > 0) {
+        uiAudio.playSeismic();
+      }
       setMapEvents(newEvents);
     };
 
