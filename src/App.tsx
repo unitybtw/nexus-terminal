@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { WorldMap2D } from './components/WorldMap2D';
 import { TickerBar } from './components/TickerBar';
 import { ChartModal } from './components/ChartModal';
+import { Portfolio } from './components/Portfolio';
 import { NexusSimulator, MarketIndex, NewsItem, MapEvent } from './core/simulator';
 import { uiAudio } from './core/audio';
 
 function App() {
+  const [activeTab, setActiveTab] = useState<'radar' | 'portfolio'>('radar');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedCity, setSelectedCity] = useState<any>(null);
   const [selectedMarket, setSelectedMarket] = useState<MarketIndex | null>(null);
@@ -47,6 +49,13 @@ function App() {
     };
   }, []);
 
+  const handleTabSwitch = (tab: 'radar' | 'portfolio') => {
+    if (activeTab !== tab) {
+      uiAudio.playOpen();
+      setActiveTab(tab);
+    }
+  };
+
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', { 
       hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' 
@@ -67,10 +76,20 @@ function App() {
 
         {/* Navigation Links */}
         <div className="hidden lg:flex items-center gap-lg">
-          <a className="text-primary border-b-2 border-primary pb-2 font-label-md text-label-md hover:bg-surface-variant/10" href="#">Radar</a>
-          <a className="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md hover:bg-surface-variant/10" href="#">Markets</a>
-          <a className="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md hover:bg-surface-variant/10" href="#">News</a>
-          <a className="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md hover:bg-surface-variant/10" href="#">Portfolio</a>
+          <button 
+            onClick={() => handleTabSwitch('radar')}
+            className={`font-label-md text-label-md transition-colors ${activeTab === 'radar' ? 'text-primary border-b-2 border-primary pb-2' : 'text-on-surface-variant hover:text-primary hover:bg-surface-variant/10 pb-2'}`}
+          >
+            Radar
+          </button>
+          <a className="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md hover:bg-surface-variant/10 pb-2" href="#">Markets</a>
+          <a className="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md hover:bg-surface-variant/10 pb-2" href="#">News</a>
+          <button 
+            onClick={() => handleTabSwitch('portfolio')}
+            className={`font-label-md text-label-md transition-colors ${activeTab === 'portfolio' ? 'text-primary border-b-2 border-primary pb-2' : 'text-on-surface-variant hover:text-primary hover:bg-surface-variant/10 pb-2'}`}
+          >
+            Portfolio
+          </button>
         </div>
 
         {/* Search & Right Actions */}
@@ -155,10 +174,12 @@ function App() {
           </svg>
         </section>
 
-        {/* Center Area: Global Radar (Map) */}
+        {/* Center Area: Global Radar or Portfolio */}
         <section className="lg:col-span-6 flex flex-col h-full relative border-x border-border-subtle px-xl overflow-hidden">
           <header className="flex justify-between items-center mb-md absolute top-0 left-xl right-xl z-20">
-            <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Global Radar</h2>
+            <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">
+              {activeTab === 'radar' ? 'Global Radar' : 'Asset Management'}
+            </h2>
             <div className="flex gap-2 items-center">
               <span className="w-2 h-2 rounded-full bg-primary pulse-dot"></span>
               <span className="font-mono-data text-mono-data text-[10px] text-on-surface-variant uppercase">Live Feed Active</span>
@@ -166,16 +187,22 @@ function App() {
           </header>
           
           <div className="flex-1 w-full h-full relative -mx-xl px-xl flex items-center justify-center mt-8">
-            <WorldMap2D onPointClick={setSelectedCity} />
-            {selectedCity && (
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-background border border-border-subtle p-md min-w-64 shadow-2xl z-50">
-                <div className="flex justify-between items-center mb-sm border-b border-border-subtle pb-xs">
-                  <h3 className="font-body-md font-semibold">{selectedCity.name}</h3>
-                  <span className="material-symbols-outlined text-[16px] cursor-pointer hover:text-negative" onClick={() => setSelectedCity(null)}>close</span>
-                </div>
-                <div className="font-label-md text-on-surface-variant mb-2">Sector: {selectedCity.type.toUpperCase()}</div>
-                <div className="font-mono-data text-xs text-on-surface-variant">Live updates streaming...</div>
-              </div>
+            {activeTab === 'radar' ? (
+              <>
+                <WorldMap2D events={mapEvents} />
+                {selectedCity && (
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-background border border-border-subtle p-md min-w-64 shadow-2xl z-50">
+                    <div className="flex justify-between items-center mb-sm border-b border-border-subtle pb-xs">
+                      <h3 className="font-body-md font-semibold">{selectedCity.name}</h3>
+                      <span className="material-symbols-outlined text-[16px] cursor-pointer hover:text-negative" onClick={() => setSelectedCity(null)}>close</span>
+                    </div>
+                    <div className="font-label-md text-on-surface-variant mb-2">Sector: {selectedCity.type.toUpperCase()}</div>
+                    <div className="font-mono-data text-xs text-on-surface-variant">Live updates streaming...</div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <Portfolio indices={indices} />
             )}
           </div>
 
