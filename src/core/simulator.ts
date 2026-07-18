@@ -24,6 +24,15 @@ export interface MapEvent {
   time: string;
 }
 
+export interface ThreatItem {
+  id: string;
+  sourceIp: string;
+  targetRegion: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  time: string;
+}
+
 // Initial state before socket connects
 export const INITIAL_INDICES: MarketIndex[] = [
   { name: 'BTC/USDT', value: 0, change: 0, isPos: true, history: [] },
@@ -36,18 +45,22 @@ export class NexusSimulator {
   private indices: MarketIndex[];
   private news: NewsItem[];
   private mapEvents: MapEvent[];
+  private threats: ThreatItem[];
   private ws: WebSocket | null = null;
   private newsInterval: NodeJS.Timeout | null = null;
   private mapInterval: NodeJS.Timeout | null = null;
+  private threatInterval: NodeJS.Timeout | null = null;
   
   public onMarketUpdate: ((indices: MarketIndex[]) => void) | null = null;
   public onNewsUpdate: ((news: NewsItem[]) => void) | null = null;
   public onMapUpdate: ((events: MapEvent[]) => void) | null = null;
+  public onThreatUpdate: ((threats: ThreatItem[]) => void) | null = null;
 
   constructor() {
     this.indices = [...INITIAL_INDICES];
     this.news = [];
     this.mapEvents = [];
+    this.threats = [];
   }
 
   private getCurrentTime() {
@@ -58,6 +71,7 @@ export class NexusSimulator {
     this.connectBinance();
     this.fetchNews();
     this.fetchMapEvents();
+    this.generateThreats();
     
     // Refresh news every 60 seconds
     this.newsInterval = setInterval(() => {
@@ -68,6 +82,14 @@ export class NexusSimulator {
     this.mapInterval = setInterval(() => {
       this.fetchMapEvents();
     }, 300000);
+
+    // Generate continuous cyber threats (every 3-8 seconds)
+    const runThreats = () => {
+      this.generateThreats();
+      const nextTick = Math.floor(Math.random() * 5000) + 3000;
+      this.threatInterval = setTimeout(runThreats, nextTick);
+    };
+    this.threatInterval = setTimeout(runThreats, 2000);
   }
 
   private connectBinance() {
@@ -186,6 +208,30 @@ export class NexusSimulator {
     }
   }
 
+  private generateThreats() {
+    const types = ['DDoS', 'SQL Injection', 'Ransomware', 'Brute Force', 'Data Exfiltration'];
+    const regions = ['us-east-1', 'eu-west-3', 'ap-northeast', 'sa-east-1', 'me-south-1'];
+    const severities: ('low' | 'medium' | 'high' | 'critical')[] = ['low', 'medium', 'high', 'critical'];
+
+    const newThreat: ThreatItem = {
+      id: Math.random().toString(36).substring(7),
+      sourceIp: `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
+      targetRegion: regions[Math.floor(Math.random() * regions.length)],
+      type: types[Math.floor(Math.random() * types.length)],
+      severity: severities[Math.floor(Math.random() * severities.length)],
+      time: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    };
+
+    this.threats.unshift(newThreat);
+    if (this.threats.length > 20) {
+      this.threats.pop();
+    }
+
+    if (this.onThreatUpdate) {
+      this.onThreatUpdate(this.threats);
+    }
+  }
+
   public stop() {
     if (this.ws) {
       this.ws.close();
@@ -195,6 +241,9 @@ export class NexusSimulator {
     }
     if (this.mapInterval) {
       clearInterval(this.mapInterval);
+    }
+    if (this.threatInterval) {
+      clearTimeout(this.threatInterval);
     }
   }
 

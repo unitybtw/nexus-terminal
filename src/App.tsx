@@ -3,8 +3,9 @@ import { WorldMap2D } from './components/WorldMap2D';
 import { TickerBar } from './components/TickerBar';
 import { ChartModal } from './components/ChartModal';
 import { Portfolio } from './components/Portfolio';
+import { ThreatFeed } from './components/ThreatFeed';
 import { NexusSimulator } from './core/simulator';
-import type { MarketIndex, NewsItem, MapEvent } from './core/simulator';
+import type { MarketIndex, NewsItem, MapEvent, ThreatItem } from './core/simulator';
 import { uiAudio } from './core/audio';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
   const [indices, setIndices] = useState<MarketIndex[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [mapEvents, setMapEvents] = useState<MapEvent[]>([]);
+  const [threats, setThreats] = useState<ThreatItem[]>([]);
 
   useEffect(() => {
     const simulator = new NexusSimulator();
@@ -36,6 +38,13 @@ function App() {
         uiAudio.playSeismic();
       }
       setMapEvents(newEvents);
+    };
+
+    simulator.onThreatUpdate = (newThreats) => {
+      if (newThreats.length > 0 && newThreats[0].severity === 'critical') {
+        uiAudio.playAlert();
+      }
+      setThreats([...newThreats]);
     };
 
     simulator.start();
@@ -220,28 +229,34 @@ function App() {
           </div>
         </section>
 
-        {/* Right Column: Live Events & News */}
-        <section className="lg:col-span-3 flex flex-col h-full">
-          <header className="border-b border-border-subtle pb-sm mb-md flex justify-between items-end">
-            <h2 className="font-label-md text-label-md text-on-surface-variant uppercase">Live Events & News</h2>
-            <span className="material-symbols-outlined text-on-surface-variant text-[16px] hover:text-primary cursor-pointer transition-colors">filter_list</span>
-          </header>
+        {/* Right Column: Live Events & News & Cyber Intel */}
+        <section className="lg:col-span-3 flex flex-col h-full gap-4">
+          <div className="flex-1 flex flex-col min-h-0 border border-border-subtle bg-surface-variant/5 rounded-xl p-4">
+            <header className="border-b border-border-subtle pb-sm mb-md flex justify-between items-end">
+              <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Live Intel Feed</h2>
+              <span className="material-symbols-outlined text-on-surface-variant text-[16px] hover:text-primary cursor-pointer transition-colors">filter_list</span>
+            </header>
 
-          <div className="flex-1 overflow-y-auto pr-2 space-y-lg">
-            {news.map((n, i) => (
-              <article key={i} className="group cursor-pointer">
-                <div className="flex items-center gap-xs mb-1">
-                  <span className="font-mono-data text-mono-data text-on-surface-variant text-[11px]">{n.time}</span>
-                  <span className="w-1 h-1 rounded-full bg-border-subtle"></span>
-                  <span className={`font-label-md text-label-md text-[10px] uppercase border px-1 rounded-sm ${n.isAlert ? 'text-negative border-negative/30' : 'text-primary border-border-subtle'}`}>
-                    {n.tag}
-                  </span>
-                </div>
-                <h3 className={`font-body-md text-body-md transition-colors leading-snug ${n.isAlert ? 'text-negative' : 'text-primary group-hover:opacity-80'}`}>
-                  {n.text}
-                </h3>
-              </article>
-            ))}
+            <div className="flex-1 overflow-y-auto pr-2 space-y-lg">
+              {news.map((n, i) => (
+                <article key={i} className="group cursor-pointer">
+                  <div className="flex items-center gap-xs mb-1">
+                    <span className="font-mono-data text-mono-data text-on-surface-variant text-[11px]">{n.time}</span>
+                    <span className="w-1 h-1 rounded-full bg-border-subtle"></span>
+                    <span className={`font-label-md text-label-md text-[10px] uppercase border px-1 rounded-sm ${n.isAlert ? 'text-negative border-negative/30' : 'text-primary border-border-subtle'}`}>
+                      {n.tag}
+                    </span>
+                  </div>
+                  <h3 className={`font-body-md text-body-md transition-colors leading-snug ${n.isAlert ? 'text-negative' : 'text-primary group-hover:opacity-80'}`}>
+                    {n.text}
+                  </h3>
+                </article>
+              ))}
+            </div>
+          </div>
+          
+          <div className="h-[40%] flex flex-col min-h-0">
+            <ThreatFeed threats={threats} />
           </div>
         </section>
       </main>

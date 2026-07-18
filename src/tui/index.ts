@@ -1,4 +1,5 @@
 import blessed from 'blessed';
+import os from 'os';
 // @ts-ignore
 import contrib from 'blessed-contrib';
 import { NexusSimulator } from '../core/simulator';
@@ -41,18 +42,32 @@ const marketTable = grid.set(0, 9, 6, 3, contrib.table, {
   columnWidth: [12, 10, 8]
 });
 
+const cpuSpark = grid.set(6, 0, 2, 4, contrib.sparkline, {
+  label: ' CPU Core Load ',
+  tags: true,
+  style: { fg: 'green' }
+});
+
+const ramDonut = grid.set(6, 4, 2, 4, contrib.donut, {
+  label: ' Memory Usage ',
+  radius: 8,
+  arcWidth: 3,
+  remainColor: 'black',
+  yPadding: 2
+});
+
 // 3. Line Chart for BTC/USDT (Middle Full Width)
-const lineChart = grid.set(6, 0, 3, 12, contrib.line, {
+const lineChart = grid.set(8, 0, 4, 8, contrib.line, {
   style: { line: "yellow", text: "green", baseline: "black" },
   xLabelPadding: 3,
   xPadding: 5,
   showLegend: true,
   wholeNumbersOnly: false, // Allows decimal prices
-  label: 'BTC/USDT Live Action'
+  label: ' BTC/USDT Price (Live) '
 });
 
 // 4. Log for News (Bottom Full Width)
-const newsLog = grid.set(9, 0, 3, 12, contrib.log, {
+const newsLog = grid.set(8, 8, 4, 4, contrib.log, {
   fg: 'green',
   selectedFg: 'green',
   label: 'Live Events & News',
@@ -145,8 +160,37 @@ simulator.onMapUpdate = (events: MapEvent[]) => {
       char: "X"
     });
   });
+  
   screen.render();
 };
+
+const cpuData = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+setInterval(() => {
+  // RAM
+  const totalMem = os.totalmem();
+  const freeMem = os.freemem();
+  const usedMem = totalMem - freeMem;
+  const ramPercent = Math.round((usedMem / totalMem) * 100);
+  
+  ramDonut.setData([
+    {percent: ramPercent, label: 'RAM', color: ramPercent > 80 ? 'red' : 'magenta'}
+  ]);
+
+  // CPU (Simulated dynamic load based on loadavg for dramatic effect)
+  const baseLoad = os.loadavg()[0] * 10;
+  const jitter = Math.random() * 20 - 10; 
+  let currentCpu = Math.max(0, Math.min(100, Math.round(baseLoad + jitter)));
+  
+  cpuData.shift();
+  cpuData.push(currentCpu);
+  
+  cpuSpark.setData(
+    ['CPU'],
+    [cpuData]
+  );
+  
+  screen.render();
+}, 1000);
 
 simulator.start();
 screen.render();
