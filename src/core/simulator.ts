@@ -5,6 +5,7 @@ export interface MarketIndex {
   value: number;
   change: number;
   isPos: boolean;
+  history: { time: string; price: number }[];
 }
 
 export interface NewsItem {
@@ -16,10 +17,10 @@ export interface NewsItem {
 
 // Initial state before socket connects
 export const INITIAL_INDICES: MarketIndex[] = [
-  { name: 'BTC/USDT', value: 0, change: 0, isPos: true },
-  { name: 'ETH/USDT', value: 0, change: 0, isPos: true },
-  { name: 'BNB/USDT', value: 0, change: 0, isPos: true },
-  { name: 'SOL/USDT', value: 0, change: 0, isPos: true }
+  { name: 'BTC/USDT', value: 0, change: 0, isPos: true, history: [] },
+  { name: 'ETH/USDT', value: 0, change: 0, isPos: true, history: [] },
+  { name: 'BNB/USDT', value: 0, change: 0, isPos: true, history: [] },
+  { name: 'SOL/USDT', value: 0, change: 0, isPos: true, history: [] }
 ];
 
 export class NexusSimulator {
@@ -66,14 +67,24 @@ export class NexusSimulator {
         const changePercent = parseFloat(data.P);
         
         const formattedName = `${symbol.replace('USDT', '')}/USDT`;
+        const timeStr = new Date().toLocaleTimeString('en-US', { hour12: false, minute: '2-digit', second: '2-digit' });
         
         const index = this.indices.findIndex(i => i.name === formattedName);
         if (index !== -1) {
+          // Throttle history updates to 1 per second per asset
+          const lastPoint = this.indices[index].history[this.indices[index].history.length - 1];
+          const newHistory = [...this.indices[index].history];
+          if (!lastPoint || lastPoint.time !== timeStr) {
+            newHistory.push({ time: timeStr, price: price });
+            if (newHistory.length > 50) newHistory.shift();
+          }
+
           this.indices[index] = {
             name: formattedName,
             value: price,
             change: changePercent,
-            isPos: changePercent >= 0
+            isPos: changePercent >= 0,
+            history: newHistory
           };
           
           if (this.onMarketUpdate) {

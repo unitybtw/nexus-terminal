@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { WorldMap2D } from './components/WorldMap2D';
 import { TickerBar } from './components/TickerBar';
+import { ChartModal } from './components/ChartModal';
 import { NexusSimulator, MarketIndex, NewsItem } from './core/simulator';
 
 function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedCity, setSelectedCity] = useState<any>(null);
+  const [selectedMarket, setSelectedMarket] = useState<MarketIndex | null>(null);
   const [indices, setIndices] = useState<MarketIndex[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
 
@@ -92,7 +94,7 @@ function App() {
           <div className="flex-1 overflow-y-auto pr-2 space-y-md">
             {indices.map((ind, i) => (
               <React.Fragment key={ind.name}>
-                <div className="group cursor-pointer">
+                <div className="group cursor-pointer" onClick={() => setSelectedMarket(ind)}>
                   <div className="flex justify-between items-baseline mb-xs">
                     <span className="font-body-md text-body-md font-semibold text-primary">{ind.name}</span>
                     <span className={`font-mono-data text-mono-data ${ind.isPos ? 'text-positive' : 'text-negative'}`}>
@@ -202,6 +204,11 @@ function App() {
           </div>
         </section>
       </main>
+
+      <ChartModal 
+        data={selectedMarket ? indices.find(i => i.name === selectedMarket.name) || selectedMarket : null} 
+        onClose={() => setSelectedMarket(null)} 
+      />
     </div>
   );
 }
